@@ -1,0 +1,7 @@
+name: AntiHealthIndicator
+version: '${project.version}'
+main: com.snuiper.antihealthindicator.AntiHealthIndicator
+api-version: 1.19
+authors: [ Snuiper228 ]
+description: Plugin that fakes entities health, so the client doesn't know exact health to prevent getting unfair advantage
+depend: [ ProtocolLib ]
