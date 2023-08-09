@@ -94,7 +94,7 @@ public final class AntiHealthIndicator extends JavaPlugin implements Listener {
                 if (packet.getType() == PacketType.Play.Server.ENTITY_METADATA) {
                     packet = packet.deepClone();
                     event.setPacket(packet);
-                    if (serverVersion > MinecraftVersion.m1_19_3.getVersion()) {
+                    if (serverVersion >= MinecraftVersion.m1_19_3.getVersion()) {
                         for (WrappedDataValue watchable : packet.getDataValueCollectionModifier().read(0)) {
                             if (!(watchable.getValue() instanceof Float) || (float) watchable.getValue() <= 0.01D) {
                                 continue;
@@ -102,12 +102,13 @@ public final class AntiHealthIndicator extends JavaPlugin implements Listener {
                             if (watchable.getIndex() == 9) { //Health
                                 if (entity instanceof IronGolem) {
                                     IronGolem ironGolem = (IronGolem) entity;
-                                    if (ironGolem.getHealth() >= 75) {
-                                        watchable.setValue(75f);
-                                    } else if (ironGolem.getHealth() >= 50) {
-                                        watchable.setValue(50f);
-                                    } else if (ironGolem.getHealth() >= 25) {
-                                        watchable.setValue(25f);
+                                    double healthPercentage = getHealthPercentage(ironGolem.getHealth(), ironGolem.getMaxHealth());
+                                    if (healthPercentage >= 0.75d) {
+                                        watchable.setValue((float)ironGolem.getMaxHealth() * 0.75f);
+                                    } else if (healthPercentage >= 0.50d) {
+                                        watchable.setValue((float)ironGolem.getMaxHealth() * 0.5f);
+                                    } else if (healthPercentage >= 0.25d) {
+                                        watchable.setValue((float)ironGolem.getMaxHealth() * 0.25f);
                                     } else {
                                         watchable.setValue(1f);
                                     }
@@ -137,12 +138,13 @@ public final class AntiHealthIndicator extends JavaPlugin implements Listener {
                             if (watchable.getIndex() == healthIndex) { //Health
                                 if (entity instanceof IronGolem) {
                                     IronGolem ironGolem = (IronGolem) entity;
-                                    if (ironGolem.getHealth() >= 75) {
-                                        watchable.setValue(75f);
-                                    } else if (ironGolem.getHealth() >= 50) {
-                                        watchable.setValue(50f);
-                                    } else if (ironGolem.getHealth() >= 25) {
-                                        watchable.setValue(25f);
+                                    double healthPercentage = getHealthPercentage(ironGolem.getHealth(), ironGolem.getMaxHealth());
+                                    if (healthPercentage >= 0.75d) {
+                                        watchable.setValue((float)ironGolem.getMaxHealth() * 0.75f);
+                                    } else if (healthPercentage >= 0.50d) {
+                                        watchable.setValue((float)ironGolem.getMaxHealth() * 0.5f);
+                                    } else if (healthPercentage >= 0.25d) {
+                                        watchable.setValue((float)ironGolem.getMaxHealth() * 0.25f);
                                     } else {
                                         watchable.setValue(1f);
                                     }
@@ -159,10 +161,17 @@ public final class AntiHealthIndicator extends JavaPlugin implements Listener {
                         if (attribute.getAttributeKey().equals("generic.max_health") || attribute.getAttributeKey().equals("generic.maxHealth")) {
                             try {
                                 StructureModifier<Object> modifier = (StructureModifier<Object>) modifierFiled.get(attribute);
-                                baseValue.put(entity, (Double) modifier.withType(double.class).read(0));
-                                modifier.withType(double.class).write(0, 20d);
-                                attributes.put(entity, modifier.withType(Collection.class).read(0));
-                                modifier.withType(Collection.class).write(0, Collections.EMPTY_LIST);
+                                double maxHealth = (Double) modifier.withType(double.class).read(0);
+                                if (entity instanceof Player) {
+                                    baseValue.put(entity, maxHealth);
+                                }
+                                if (entity instanceof Golem) {
+                                    modifier.withType(double.class).write(0, maxHealth);
+                                } else {
+                                    modifier.withType(double.class).write(0, 20d);
+                                    attributes.put(entity, modifier.withType(Collection.class).read(0));
+                                    modifier.withType(Collection.class).write(0, Collections.EMPTY_LIST);
+                                }
                             } catch (IllegalAccessException e) {
                                 e.printStackTrace();
                             }
@@ -196,5 +205,9 @@ public final class AntiHealthIndicator extends JavaPlugin implements Listener {
         Vehicle vehicle = event.getVehicle();
         Player player = (Player) event.getExited();
         Bukkit.getScheduler().scheduleSyncDelayedTask(this, () -> ProtocolLibrary.getProtocolManager().updateEntity(vehicle, Collections.singletonList(player)));
+    }
+
+    private double getHealthPercentage(double health, double maxHealth) {
+        return health / maxHealth;
     }
 }

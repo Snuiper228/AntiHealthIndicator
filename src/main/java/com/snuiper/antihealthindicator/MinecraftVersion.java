@@ -38,7 +38,8 @@ public enum MinecraftVersion {
     m1_19_1(1, 19, 1),
     m1_19_2(1, 19, 2),
     m1_19_3(1, 19, 3),
-    m1_19_4(1, 19, 4);
+    m1_19_4(1, 19, 4),
+    mUNKNOWN(Integer.MAX_VALUE, 0, 0);
 
     private static MinecraftVersion serverVersion;
 
@@ -59,14 +60,7 @@ public enum MinecraftVersion {
             try {
                 serverVersion = MinecraftVersion.valueOf("m" + major + "_" + minor + "_" + build);
             } catch (IllegalArgumentException e) {
-                System.err.println("--------------------------------------");
-                System.err.println("|| Anti health indicator bug!!!");
-                System.err.println("|| Parsing minecraft version");
-                System.err.println("|| major: " + major);
-                System.err.println("|| minor: " + minor);
-                System.err.println("|| build: " + build);
-                System.err.println("|| Exception: " + e);
-                System.err.println("--------------------------------------");
+                serverVersion = mUNKNOWN;
             }
         }
         return serverVersion;
@@ -216,7 +210,11 @@ public enum MinecraftVersion {
         this.major = major;
         this.minor = minor;
         this.build = build;
-        this.version = Integer.parseInt("" + major + minor + build);
+        if (major == Integer.MAX_VALUE) {
+            this.version = major;
+        } else {
+            this.version = Integer.parseInt("" + major + minor + build);
+        }
     }
 
     public int getVersion() {
